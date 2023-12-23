@@ -6,3 +6,5 @@ HWH.c
 makefile
 readstrings.c
 readstrings.h
+usubstr.c
+usubstr.h
