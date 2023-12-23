@@ -17,7 +17,7 @@ struct uhash_cell {
     void  *content;
 };
 
-struct uhash_map {
+struct uhmap {
     size_t map_size;
     size_t is_multi_set;
     struct uhash_cell *map;
@@ -27,12 +27,12 @@ struct uhash_map {
 };
 
 static size_t next_number_pow_of_two(const size_t num);
-static size_t uhash_1(struct uhash_map *hmap, const void *new_elem, const size_t size_elem);
-static size_t uhash_2(struct uhash_map *hmap, const void *new_elem, const size_t size_elem);
-static void   add_coeff(struct uhash_map *hmap);
+static size_t uhash_1(struct uhmap *hmap, const void *new_elem, const size_t size_elem);
+static size_t uhash_2(struct uhmap *hmap, const void *new_elem, const size_t size_elem);
+static void   add_coeff(struct uhmap *hmap);
 
-struct uhash_map *new_uhmap(const size_t initial_quantity, const size_t is_multi_set) {
-    struct uhash_map *hmap = (struct uhash_map *) calloc(1, sizeof(struct uhash_map));
+struct uhmap *new_uhmap(const size_t initial_quantity, const size_t is_multi_set) {
+    struct uhmap *hmap = (struct uhmap *) calloc(1, sizeof(struct uhmap));
 
     if (hmap == NULL) {
         PERROR_FALLOC;
@@ -56,11 +56,14 @@ struct uhash_map *new_uhmap(const size_t initial_quantity, const size_t is_multi
     return hmap;
 }
 
-void uhmap_addelm(struct uhash_map * *hmap, const void *new_elem, const size_t size_elem) {
+void uhmap_addelm(struct uhmap * *hmap, const void *new_elem, const size_t size_elem) {
     if ((hmap == NULL) || (*hmap == NULL) || (new_elem == NULL)) {
         PERROR_NULLPTR;
         return;
     }
+
+    if (size_elem == 0)
+        return;
 
     size_t hash_1 = uhash_1(*hmap, new_elem, size_elem);
     size_t hash_2 = uhash_2(*hmap, new_elem, size_elem);
@@ -111,11 +114,14 @@ void uhmap_addelm(struct uhash_map * *hmap, const void *new_elem, const size_t s
     (*hmap)->num_elem++;
 }
 
-void uhmap_delelm(struct uhash_map *hmap, const void *del_elem, const size_t size_elem) {
+void uhmap_delelm(struct uhmap *hmap, const void *del_elem, const size_t size_elem) {
     if ((hmap == NULL) || (del_elem == NULL)) {
         PERROR_NULLPTR;
         return;
     }
+
+    if (size_elem == 0)
+        return;
 
     size_t del_pos = uhmap_search(hmap, del_elem, size_elem);
 
@@ -131,11 +137,14 @@ void uhmap_delelm(struct uhash_map *hmap, const void *del_elem, const size_t siz
     hmap->num_elem--;
 }
 
-size_t uhmap_search(struct uhash_map *hmap, const void *ser_elem, const size_t size_elem) {
+size_t uhmap_search(struct uhmap *hmap, const void *ser_elem, const size_t size_elem) {
     if ((hmap == NULL) || (ser_elem == NULL)) {
         PERROR_NULLPTR;
         return UHMENF;
     }
+
+    if (size_elem == 0)
+        return UHMENF;
 
     size_t hash_1 = uhash_1(hmap, ser_elem, size_elem);
     size_t hash_2 = uhash_2(hmap, ser_elem, size_elem);
@@ -154,7 +163,34 @@ size_t uhmap_search(struct uhash_map *hmap, const void *ser_elem, const size_t s
     return UHMENF;
 }
 
-void uhmap_delmap(struct uhash_map * *hmap) {
+size_t uhmap_ctnelm(struct uhmap *hmap, const void *ser_elem, const size_t size_elem) {
+    if ((hmap == NULL) || (ser_elem == NULL)) {
+        PERROR_NULLPTR;
+        return UHMENF;
+    }
+
+    if (size_elem == 0)
+        return 0;
+
+    size_t hash_1 = uhash_1(hmap, ser_elem, size_elem);
+    size_t hash_2 = uhash_2(hmap, ser_elem, size_elem);
+    size_t hash   = hash_1;
+    size_t num    = 0;
+
+    while ((hmap->map + hash)->size != 0) {
+        if (((hmap->map + hash)->size == size_elem) && (!memcmp((hmap->map + hash)->content, ser_elem, size_elem)))
+            num++;
+
+        hash = (hash + hash_2) % hmap->map_size;
+
+        if (hash == hash_1)
+            return num;
+    }
+
+    return num;
+}
+
+void uhmap_delmap(struct uhmap * *hmap) {
     if ((hmap == NULL) || (*hmap == NULL)) {
         PERROR_NULLPTR;
         return;
@@ -168,7 +204,7 @@ void uhmap_delmap(struct uhash_map * *hmap) {
     free(*hmap);
 }
 
-void uhmap_printb(struct uhash_map *hmap, const char *binary_file) {
+void uhmap_savetb(struct uhmap *hmap, const char *binary_file) {
     if ((hmap == NULL) || (binary_file == NULL)) {
         PERROR_NULLPTR;
         return;
@@ -200,7 +236,7 @@ void uhmap_printb(struct uhash_map *hmap, const char *binary_file) {
     fclose(bf);
 }
 
-struct uhash_map *uhmap_readbf(const char *binary_file) {
+struct uhmap *uhmap_readbf(const char *binary_file) {
     if (binary_file == NULL) {
         PERROR_NULLPTR;
         return NULL;
@@ -236,7 +272,7 @@ struct uhash_map *uhmap_readbf(const char *binary_file) {
         return NULL;
     }
 
-    struct uhash_map *hmap = new_uhmap(map_size, is_multi_set);
+    struct uhmap *hmap = new_uhmap(map_size, is_multi_set);
 
     if (hmap == NULL) {
         PERROR_PREFIX; fprintf(stderr, "failed new_uhmap\n");
@@ -288,7 +324,7 @@ struct uhash_map *uhmap_readbf(const char *binary_file) {
     return hmap;
 }
 
-void uhmap_resize(struct uhash_map * *hmap, const size_t new_size) {
+void uhmap_resize(struct uhmap * *hmap, const size_t new_size) {
     if ((hmap == NULL) || (*hmap == NULL)) {
         PERROR_NULLPTR;
         return;
@@ -299,7 +335,7 @@ void uhmap_resize(struct uhash_map * *hmap, const size_t new_size) {
         return;
     }
 
-    struct uhash_map *new_hmap = new_uhmap(new_size, (*hmap)->is_multi_set);
+    struct uhmap *new_hmap = new_uhmap(new_size, (*hmap)->is_multi_set);
 
     for (size_t i = 0; i < (*hmap)->map_size; i++) {
         if ((((*hmap)->map + i)->size != 0) && (((*hmap)->map + i)->size != DELETED)) {
@@ -314,9 +350,10 @@ void uhmap_resize(struct uhash_map * *hmap, const size_t new_size) {
     *hmap = new_hmap;
 }
 
-static size_t uhash_1(struct uhash_map *hmap, const void *new_elem, const size_t size_elem) {
+static size_t uhash_1(struct uhmap *hmap, const void *new_elem, const size_t size_elem) {
     assert(hmap);
     assert(new_elem);
+    assert(size_elem > 0);
 
     size_t res = 0;
 
@@ -328,9 +365,10 @@ static size_t uhash_1(struct uhash_map *hmap, const void *new_elem, const size_t
     return res;
 }
 
-static size_t uhash_2(struct uhash_map *hmap, const void *new_elem, const size_t size_elem) {
+static size_t uhash_2(struct uhmap *hmap, const void *new_elem, const size_t size_elem) {
     assert(hmap);
     assert(new_elem);
+    assert(size_elem > 0);
 
     size_t res = 0;
 
@@ -377,7 +415,7 @@ static size_t next_number_pow_of_two(const size_t num) {
     return res;
 }
 
-static void add_coeff(struct uhash_map *hmap) {
+static void add_coeff(struct uhmap *hmap) {
     assert(hmap);
 
     hmap->ah1 = random() % hmap->map_size;
@@ -385,7 +423,7 @@ static void add_coeff(struct uhash_map *hmap) {
 }
 
 
-size_t uhmap_mpsize(struct uhash_map *hmap) {
+size_t uhmap_mpsize(struct uhmap *hmap) {
     if (hmap == NULL) {
         PERROR_NULLPTR;
         return 0;
@@ -394,7 +432,7 @@ size_t uhmap_mpsize(struct uhash_map *hmap) {
     return hmap->map_size;
 }
 
-size_t uhmap_numelm(struct uhash_map *hmap) {
+size_t uhmap_numelm(struct uhmap *hmap) {
     if (hmap == NULL) {
         PERROR_NULLPTR;
         return 0;
@@ -403,7 +441,7 @@ size_t uhmap_numelm(struct uhash_map *hmap) {
     return hmap->num_elem;
 }
 
-size_t uhmap_ismult(struct uhash_map *hmap) {
+size_t uhmap_ismult(struct uhmap *hmap) {
     if (hmap == NULL) {
         PERROR_NULLPTR;
         return 0;

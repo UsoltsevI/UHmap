@@ -2,5 +2,7 @@
 *.x
 *.out
 *.bin
-test.c
+HWH.c
 makefile
+readstrings.c
+readstrings.h

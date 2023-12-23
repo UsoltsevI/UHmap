@@ -31,45 +31,45 @@ If you are working on a machine where there are not 8 bits in one byte, you can 
 
 * The table is created using the function:
 ```
-struct uhash_map *new_uhmap(const size_t initial_quantity, const size_t is_multi_set); 
+struct uhmap *new_uhmap(const size_t initial_quantity, const size_t is_multi_set); 
 ```
 * The next function is used to read a table created by the same program from a binary file:
 ```
-struct uhash_map *uhmap_readbf(const char *binary_file);
+struct uhmap *uhmap_readbf(const char *binary_file);
 ```
 * The following function is used to search for a given element in a table:
 ```
-size_t uhmap_search(struct uhash_map *hmap, const void *ser_elem, const size_t size_elem);
+size_t uhmap_search(struct uhmap *hmap, const void *ser_elem, const size_t size_elem);
 ```
 If the element is not found, the function will return UHMENF (UHASH MAP ELEMENT NOT FOUND = (size_t) -0xF).
 
 * Removing an element:
 ```
-void   uhmap_delelm(struct uhash_map *hmap, const void *del_elem, const size_t size_elem);
+void   uhmap_delelm(struct uhmap *hmap, const void *del_elem, const size_t size_elem);
 ```
 * Saving table to file:
 ```
-void   uhmap_savetb(struct uhash_map *hmap, const char *binary_file);
+void   uhmap_savetb(struct uhmap *hmap, const char *binary_file);
 ```
 * Adding an element:
 ```
-void   uhmap_addelm(struct uhash_map * *hmap, const void *new_elem, const size_t size_elem);
+void   uhmap_addelm(struct uhmap * *hmap, const void *new_elem, const size_t size_elem);
 ```
 * Resizing a table:
 ```
-void   uhmap_resize(struct uhash_map * *hmap, const size_t new_size);
+void   uhmap_resize(struct uhmap * *hmap, const size_t new_size);
 ```
 * Deleting a table:
 ```
-void   uhmap_delmap(struct uhash_map * *hmap);
+void   uhmap_delmap(struct uhmap * *hmap);
 ```
 * Getting the table size:
 ```
-size_t uhmap_mpsize(struct uhash_map *hmap);
+size_t uhmap_mpsize(struct uhmap *hmap);
 ```
 * Getting the number of elements in a table:
 ```
-size_t uhmap_numelm(struct uhash_map *hmap);
+size_t uhmap_numelm(struct uhmap *hmap);
 ```
 Errors that occur during program execution will be printed to stderr.
 
